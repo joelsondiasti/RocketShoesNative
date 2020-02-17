@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Image } from 'react-native';
+import { connect } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import PropTypes from 'prop-types';
 import logo from '../../assets/images/logo.png';
@@ -26,6 +27,8 @@ class Header extends Component {
   };
 
   render() {
+    const { cartSize } = this.props;
+
     return (
       <Wrapper>
         <Container>
@@ -38,12 +41,15 @@ class Header extends Component {
           </Logo>
           <CartIcon onPress={this.navigateToCart}>
             <Icon name="shopping-basket" size={30} color="#FFF" />
-            <Badge>1</Badge>
+            <Badge>{cartSize}</Badge>
           </CartIcon>
         </Container>
       </Wrapper>
     );
   }
 }
+const mapStateToProps = state => ({
+  cartSize: state.cart.length
+});
 
-export default Header;
+export default connect(mapStateToProps)(Header);

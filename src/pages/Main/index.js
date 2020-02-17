@@ -1,9 +1,13 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 import { Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import PropTypes from 'prop-types';
 import api from '../../services/api';
 import { formatPrice } from '../../utils/format';
+
+import * as CartActions from '../../store/modules/cart/actions';
 
 import {
   Container,
@@ -17,7 +21,7 @@ import {
   BuyButtonText
 } from './styles';
 
-export default class Main extends Component {
+class Main extends Component {
   static propTypes = {
     navigation: PropTypes.shape({
       navigate: PropTypes.func
@@ -36,18 +40,18 @@ export default class Main extends Component {
       priceFormatted: formatPrice(product.price)
     }));
 
-    console.tron.log(data);
-
     this.setState({ products: data });
   }
 
-  handleAddCart = product => {
-    const { navigation } = this.props;
-    navigation.navigate('Cart', { product });
+  handleAddProduct = id => {
+    const { addToCartRequest } = this.props;
+    addToCartRequest(id);
   };
 
   render() {
     const { products } = this.state;
+    const { amount } = this.props;
+
     return (
       <Container>
         <ProductList
@@ -60,10 +64,10 @@ export default class Main extends Component {
               />
               <ItemText>{item.title}</ItemText>
               <ItemPrice>{item.priceFormatted}</ItemPrice>
-              <BuyButton onPress={() => this.handleAddCart()}>
+              <BuyButton onPress={() => this.handleAddProduct(item.id)}>
                 <AmountCart>
                   <Icon name="add-shopping-cart" size={20} color="#FFF" />
-                  <AmountCartText>1</AmountCartText>
+                  <AmountCartText>{amount[item.id] || 0}</AmountCartText>
                 </AmountCart>
                 <BuyButtonText>ADICIONAR</BuyButtonText>
               </BuyButton>
@@ -75,3 +79,18 @@ export default class Main extends Component {
     );
   }
 }
+
+const mapStateToProps = state => ({
+  amount: state.cart.reduce((amount, product) => {
+    amount[product.id] = product.amount;
+    return amount;
+  }, {})
+});
+
+const mapDispatchToProps = dispatch =>
+  bindActionCreators(CartActions, dispatch);
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Main);

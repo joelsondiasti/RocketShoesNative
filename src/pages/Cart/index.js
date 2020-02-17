@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { formatPrice } from '../../utils/format';
 import {
   Container,
   EmptyCart,
@@ -26,42 +29,20 @@ import {
   FinishButtonText
 } from './styles';
 
-export default class Cart extends Component {
-  state = {
-    cart: [
-      {
-        id: 1,
-        title: 'Tênis de Caminhada Leve Confortável',
-        price: 'R$ 179,90',
-        image:
-          'https://rocketseat-cdn.s3-sa-east-1.amazonaws.com/modulo-redux/tenis1.jpg'
-      },
-      {
-        id: 2,
-        title: 'Tênis VR Caminhada Confortável Detalhes Couro Masculino',
-        price: 'R$ 139,00',
-        image:
-          'https://rocketseat-cdn.s3-sa-east-1.amazonaws.com/modulo-redux/tenis2.jpg'
-      },
-      {
-        id: 3,
-        title: 'Tênis Adidas Duramo Lite 2.0',
-        price: 'R$ 219,90',
-        image:
-          'https://rocketseat-cdn.s3-sa-east-1.amazonaws.com/modulo-redux/tenis3.jpg'
-      },
-      {
-        id: 4,
-        title: 'Tênis Adidas Duramo Lite 2.0',
-        price: 'R$ 216,90',
-        image:
-          'https://rocketseat-cdn.s3-sa-east-1.amazonaws.com/modulo-redux/tenis3.jpg'
-      }
-    ]
-  };
+import * as CartActions from '../../store/modules/cart/actions';
+
+class Cart extends Component {
+  state = {};
 
   render() {
-    const { cart } = this.state;
+    const { cart, total, removeFromCart, updateAmountRequest } = this.props;
+    function increment(product) {
+      updateAmountRequest(product.id, product.amount + 1);
+    }
+    function decrement(product) {
+      updateAmountRequest(product.id, product.amount - 1);
+    }
+
     return (
       <Container>
         {cart <= 0 ? (
@@ -83,23 +64,23 @@ export default class Cart extends Component {
                     <ItemImage source={{ uri: item.image }} />
                     <Description>
                       <ItemTitle>{item.title}</ItemTitle>
-                      <ItemPrice>{item.price}</ItemPrice>
+                      <ItemPrice>{item.priceFormatted}</ItemPrice>
                     </Description>
-                    <TrashButton>
+                    <TrashButton onPress={() => removeFromCart(item.id)}>
                       <Icon name="delete-forever" size={30} color="#7159c1" />
                     </TrashButton>
                   </CardHeader>
                   <CardFooter>
                     <Amount>
-                      <RemoveButon>
+                      <RemoveButon onPress={() => decrement(item)}>
                         <Icon
                           name="remove-circle-outline"
                           size={20}
                           color="#7159c1"
                         />
                       </RemoveButon>
-                      <AmountCount>3</AmountCount>
-                      <AddButton>
+                      <AmountCount>{item.amount}</AmountCount>
+                      <AddButton onPress={() => increment(item)}>
                         <Icon
                           name="add-circle-outline"
                           size={20}
@@ -107,7 +88,7 @@ export default class Cart extends Component {
                         />
                       </AddButton>
                     </Amount>
-                    <SubTotal>R$ 100,00</SubTotal>
+                    <SubTotal>{item.subtotal}</SubTotal>
                   </CardFooter>
                 </CartItem>
               )}
@@ -115,7 +96,7 @@ export default class Cart extends Component {
             />
             <TotalContainer>
               <TotalText>TOTAL</TotalText>
-              <TotalValue>R$1619,10</TotalValue>
+              <TotalValue>{total}</TotalValue>
               <FinishButton>
                 <FinishButtonText>FINALIZAR PEDIDO</FinishButtonText>
               </FinishButton>
@@ -126,3 +107,22 @@ export default class Cart extends Component {
     );
   }
 }
+const mapStateToProps = state => ({
+  cart: state.cart.map(product => ({
+    ...product,
+    subtotal: formatPrice(product.price * product.amount)
+  })),
+  total: formatPrice(
+    state.cart.reduce((total, product) => {
+      return total + product.price * product.amount;
+    }, 0)
+  )
+});
+
+const mapDispatchToProps = dispatch =>
+  bindActionCreators(CartActions, dispatch);
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Cart);
