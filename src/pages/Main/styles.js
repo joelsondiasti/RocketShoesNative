@@ -1,6 +1,17 @@
 import styled from 'styled-components/native';
 import { RectButton } from 'react-native-gesture-handler';
+
 // import { darken } from 'polished';
+
+export const Loading = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  background: #191920;
+`;
+export const LoadingText = styled.Text`
+  color: #fff;
+`;
 
 export const Container = styled.View`
   flex: 1;

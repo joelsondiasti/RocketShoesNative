@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Image } from 'react-native';
+import { Image, ToastAndroid } from 'react-native';
+
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import PropTypes from 'prop-types';
 import api from '../../services/api';
@@ -9,6 +10,8 @@ import { formatPrice } from '../../utils/format';
 import * as CartActions from '../../store/modules/cart/actions';
 
 import {
+  LoadingText,
+  Loading,
   Container,
   ProductList,
   CardItem,
@@ -33,14 +36,24 @@ export default function Main() {
 
   useEffect(() => {
     async function loadProducts() {
-      const response = await api.get('products');
+      try {
+        const response = await api.get('products');
 
-      const data = response.data.map(product => ({
-        ...product,
-        priceFormatted: formatPrice(product.price)
-      }));
+        const data = response.data.map(product => ({
+          ...product,
+          priceFormatted: formatPrice(product.price)
+        }));
 
-      setProducts(data);
+        setProducts(data);
+      } catch (error) {
+        ToastAndroid.showWithGravityAndOffset(
+          'Network Error - Server is not available',
+          ToastAndroid.LONG,
+          ToastAndroid.BOTTOM,
+          0,
+          50
+        );
+      }
     }
 
     loadProducts();
@@ -49,7 +62,14 @@ export default function Main() {
   function handleAddProduct(id) {
     dispatch(CartActions.addToCartRequest(id));
   }
-
+  if (products.length === 0) {
+    return (
+      <Loading>
+        <Icon name="autorenew" size={40} color="#fff" />
+        <LoadingText>Carregando...</LoadingText>
+      </Loading>
+    );
+  }
   return (
     <Container>
       <ProductList
